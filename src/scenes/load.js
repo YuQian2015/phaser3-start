@@ -13,6 +13,10 @@ export class LoadScene extends Phaser.Scene {
         this.load.image('red', 'particles/red.png');
         this.load.image('star', 'particles/x0.png');
         this.load.image('groundCommon', 'ground/ground-common.png');
+        this.load.spritesheet('dude',
+            'sprites/dude.png',
+            { frameWidth: 32, frameHeight: 48 }
+        );
     }
     create() {
 
@@ -26,6 +30,43 @@ export class LoadScene extends Phaser.Scene {
         this.platforms.create(600, 400, 'groundCommon');
         this.platforms.create(50, 250, 'groundCommon');
         this.platforms.create(750, 220, 'groundCommon');
+
+        // 对玩家的设置
+
+        this.player = this.physics.add.sprite(100, 450, 'dude');
+        this.player.setBounce(0.2);
+        this.player.setCollideWorldBounds(true);
+
+        // 创建键盘光标
+        this.cursors = this.input.keyboard.createCursorKeys();
+
+
+        // 创建player动画
+        this.anims.create({
+            key: 'left',
+            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'turn',
+            frames: [{ key: 'dude', frame: 4 }],
+            frameRate: 20
+        });
+
+        this.anims.create({
+            key: 'right',
+            frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // player的物理系统
+
+        this.player.body.setGravityY(150);
+
+        this.physics.add.collider(this.player, this.platforms);
 
         // const particles = this.add.particles('red');
 
@@ -44,5 +85,25 @@ export class LoadScene extends Phaser.Scene {
         // emitter.startFollow(logo);
 
         // this.scene.start("PlayGame");
+    }
+
+    update() {
+
+        if (this.cursors.left.isDown) {
+            this.player.setVelocityX(-160);
+            this.player.anims.play('left', true);
+        }
+        else if (this.cursors.right.isDown) {
+            this.player.setVelocityX(160);
+            this.player.anims.play('right', true);
+        }
+        else {
+            this.player.setVelocityX(0);
+            this.player.anims.play('turn');
+        }
+
+        if (this.cursors.space.isDown && this.player.body.touching.down) {
+            this.player.setVelocityY(-330);
+        }
     }
 }
