@@ -11,7 +11,8 @@ export class LoadScene extends Phaser.Scene {
         this.load.image('sky', 'skies/space3.png');
         this.load.image('ground', 'sprites/phaser3-logo.png');
         this.load.image('red', 'particles/red.png');
-        this.load.image('star', 'particles/x0.png');
+        this.load.image('bomb', 'sprites/bomb.png');
+        this.load.image('star', 'particles/star.png');
         this.load.image('groundCommon', 'ground/ground-common.png');
         this.load.spritesheet('dude',
             'sprites/dude.png',
@@ -23,7 +24,6 @@ export class LoadScene extends Phaser.Scene {
         this.platforms = this.physics.add.staticGroup();
 
         this.add.image(400, 300, 'sky');
-        this.add.image(400, 300, 'star');
 
         this.platforms.create(375, 568, 'groundCommon').setScale(2).refreshBody();
 
@@ -68,6 +68,69 @@ export class LoadScene extends Phaser.Scene {
 
         this.physics.add.collider(this.player, this.platforms);
 
+
+
+        this.stars = this.physics.add.group({
+            key: 'star',
+            repeat: 11,
+            setXY: { x: 12, y: 0, stepX: 60 }
+        });
+
+        this.stars.children.iterate(function (child) {
+
+            child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+
+        });
+
+        this.physics.add.collider(this.stars, this.platforms);
+
+
+        // 分数统计
+        this.score = 0;
+        this.scoreText = this.add.text(16, 16, '得分: 0', { fontSize: '32px', fill: '#FFF' });
+
+        // 收集星星
+        this.physics.add.overlap(this.player, this.stars, collectStar, null, this);
+
+        function collectStar(player, star) {
+            star.disableBody(true, true);
+
+            this.score += 10;
+            this.scoreText.setText('得分: ' + this.score);
+
+            if (this.stars.countActive(true) === 0) {
+                this.stars.children.iterate(function (child) {
+                    child.enableBody(true, child.x, 0, true, true);
+                });
+        
+                var x = (this.player.x < 375) ? Phaser.Math.Between(375, 750) : Phaser.Math.Between(0, 375);
+        
+                var bomb = this.bombs.create(x, 16, 'bomb');
+                bomb.setBounce(1);
+                bomb.setCollideWorldBounds(true);
+                bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+        
+            }
+        }
+
+
+        this.bombs = this.physics.add.group();
+
+        this.physics.add.collider(this.bombs, this.platforms);
+
+        this.physics.add.collider(this.player, this.bombs, hitBomb, null, this);
+
+        function hitBomb (player, bomb)
+        {
+            this.physics.pause();
+        
+            player.setTint(0xff0000);
+        
+            player.anims.play('turn');
+        
+            this.gameOver = true;
+        }
+
         // const particles = this.add.particles('red');
 
         // const emitter = particles.createEmitter({
@@ -90,11 +153,11 @@ export class LoadScene extends Phaser.Scene {
     update() {
 
         if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-160);
+            this.player.setVelocityX(-260);
             this.player.anims.play('left', true);
         }
         else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(160);
+            this.player.setVelocityX(260);
             this.player.anims.play('right', true);
         }
         else {
