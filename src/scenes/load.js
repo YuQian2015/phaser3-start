@@ -147,7 +147,7 @@ export class LoadScene extends Phaser.Scene {
 
         // emitter.startFollow(logo);
 
-        // this.scene.start("PlayGame");
+        this.scene.start("Controller");
     }
 
     update() {
